@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Digger</title>
+  <meta name="description" content="Digger Remastered, el clásico de 1983, jugable en el navegador.">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Digger">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="stage">
+    <canvas id="screen" aria-label="Pantalla del juego"></canvas>
+  </div>
+  <div id="fps" hidden></div>
+  <div id="touch-root"></div>
+
+  <!-- Editor de controles táctiles (se ve sobre el juego, con los controles reales) -->
+  <div id="editor" class="editor" hidden>
+    <div class="editor-head">
+      <strong>Mando táctil</strong>
+      <span class="badge" id="ed-orient"></span>
+      <button type="button" class="btn icon" id="ed-collapse" aria-expanded="true" aria-controls="ed-body" title="Plegar o desplegar el panel">▴</button>
+    </div>
+    <div class="editor-body" id="ed-body">
+      <p class="editor-hint">Arrastra cada cruceta y cada botón de disparo. La disposición vertical y la horizontal se guardan por separado: gira el teléfono para ajustar la otra.</p>
+      <label class="check"><input type="checkbox" id="ed-two"> Controles del jugador 2 (modos simultáneo y versus)</label>
+      <div class="ed-grid">
+        <label class="slider">Cruceta J1 <input type="range" id="ed-dpad" min="0.6" max="1.8" step="0.05"></label>
+        <label class="slider">Disparo J1 <input type="range" id="ed-fire" min="0.6" max="1.8" step="0.05"></label>
+        <label class="slider p2-only">Cruceta J2 <input type="range" id="ed-dpad2" min="0.6" max="1.8" step="0.05"></label>
+        <label class="slider p2-only">Disparo J2 <input type="range" id="ed-fire2" min="0.6" max="1.8" step="0.05"></label>
+      </div>
+      <label class="slider">Transparencia <input type="range" id="ed-opacity" min="0.1" max="1" step="0.05"></label>
+      <div class="presets">
+        <div class="preset-row">
+          <select id="ed-preset" aria-label="Presets guardados"></select>
+          <button type="button" class="btn danger" id="ed-preset-del">Borrar</button>
+        </div>
+        <div class="preset-row">
+          <input type="text" id="ed-preset-name" maxlength="24" placeholder="Nombre del preset" autocomplete="off" enterkeyhint="done">
+          <button type="button" class="btn" id="ed-preset-save">Guardar preset</button>
+        </div>
+      </div>
+      <div class="row-buttons">
+        <button type="button" class="btn" id="ed-reset">Restablecer</button>
+        <button type="button" class="btn primary" id="ed-done">Listo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ventana previa: configuración antes de jugar -->
+  <main id="menu" class="menu">
+    <div class="menu-card">
+      <header class="menu-head">
+        <img src="icons/icon-192.png" alt="" class="logo">
+        <div>
+          <h1>DIGGER</h1>
+          <p class="sub">Digger Remastered · versión web</p>
+        </div>
+      </header>
+
+      <button type="button" class="btn play" id="play">▶ Jugar</button>
+      <p class="hint" id="play-hint"></p>
+
+      <nav class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="game" class="active">Juego</button>
+        <button type="button" role="tab" data-tab="touch">Táctil</button>
+        <button type="button" role="tab" data-tab="keys">Teclas</button>
+        <button type="button" role="tab" data-tab="scores">Récords</button>
+      </nav>
+
+      <section class="panel" data-panel="game">
+        <label class="field">Modo de juego
+          <select id="opt-mode">
+            <option value="1p">1 jugador</option>
+            <option value="2p">2 jugadores (por turnos)</option>
+            <option value="2s">2 jugadores (simultáneo)</option>
+            <option value="vs">2 jugadores versus (puntos y vidas compartidos)</option>
+            <option value="gauntlet">Gauntlet (contrarreloj)</option>
+          </select>
+        </label>
+        <label class="field" id="row-gtime">Tiempo de Gauntlet (segundos)
+          <input type="number" id="opt-gtime" min="10" max="3599" step="10" inputmode="numeric">
+        </label>
+        <label class="field">Nivel inicial
+          <input type="number" id="opt-level" min="1" max="1000" inputmode="numeric">
+        </label>
+        <label class="slider">Velocidad <output id="opt-speed-out"></output>
+          <input type="range" id="opt-speed" min="40" max="200" step="5">
+        </label>
+        <label class="check"><input type="checkbox" id="opt-unlimited"> Vidas ilimitadas</label>
+        <label class="check"><input type="checkbox" id="opt-sound"> Sonido</label>
+        <label class="check"><input type="checkbox" id="opt-music"> Música</label>
+        <label class="slider">Volumen <input type="range" id="opt-volume" min="0" max="1" step="0.05"></label>
+        <label class="check"><input type="checkbox" id="opt-fps"> Mostrar FPS (pantalla y juego)</label>
+        <p class="note">El juego avanza a ritmo fijo medido con el reloj del navegador, no con el refresco de la pantalla: va a la misma velocidad a 60, 90 o 120 Hz y con refresco variable.</p>
+      </section>
+
+      <section class="panel" data-panel="touch" hidden>
+        <label class="check"><input type="checkbox" id="opt-touch"> Mostrar controles táctiles</label>
+        <p class="note">Al activarlos se abre el editor sobre la pantalla del juego para colocar y dimensionar el mando mientras lo ves.</p>
+        <button type="button" class="btn" id="edit-touch">Ajustar mando táctil</button>
+        <label class="field">Preset
+          <select id="opt-preset"></select>
+        </label>
+        <p class="note" id="touch-summary"></p>
+        <p class="note">Las iniciales de un récord se eligen con la cruceta: arriba y abajo cambian la letra, disparo la confirma e izquierda borra.</p>
+      </section>
+
+      <section class="panel" data-panel="keys" hidden>
+        <p class="note">Toca una casilla y pulsa la tecla nueva; tocarla dos veces la deja vacía. Cada acción admite dos teclas. Si la tecla ya estaba en uso, se quita de la otra acción.</p>
+        <h2>Controles</h2>
+        <div class="keymap" id="keys-controls"></div>
+        <h2>Sistema</h2>
+        <div class="keymap" id="keys-system"></div>
+        <button type="button" class="btn" id="keys-reset">Restablecer teclas</button>
+        <p class="note">También funciona un mando: cruceta o palanca para moverse, A/B/X/Y para disparar, Start para pausar y Select para volver al título.</p>
+      </section>
+
+      <section class="panel" data-panel="scores" hidden>
+        <label class="field">Tabla
+          <select id="scores-mode">
+            <option value="1p">1 o 2 jugadores por turnos</option>
+            <option value="2s">2 jugadores simultáneo o versus</option>
+            <option value="gauntlet">Gauntlet</option>
+          </select>
+        </label>
+        <ol class="scores" id="scores-list"></ol>
+        <p class="note">Los récords se guardan en este navegador (localStorage). Puedes importar un archivo DIGGER.SCO de la versión de PC.</p>
+        <div class="row-buttons">
+          <button type="button" class="btn" id="scores-import">Importar DIGGER.SCO</button>
+          <button type="button" class="btn" id="scores-export">Exportar</button>
+          <button type="button" class="btn danger" id="scores-clear">Borrar</button>
+        </div>
+        <input type="file" id="scores-file" accept=".sco,.SCO,application/octet-stream" hidden>
+      </section>
+
+      <footer class="menu-foot">
+        <div id="install-box" hidden>
+          <button type="button" class="btn" id="install">Instalar como app</button>
+        </div>
+        <p class="note" id="ios-install" hidden>Para instalarlo en el iPhone: botón Compartir de Safari → «Añadir a pantalla de inicio».</p>
+        <p class="credits">Digger © 1983 Windmill Software. Digger Remastered © 1998-2004 Andrew Jenner. Licencia GPL v2.</p>
+      </footer>
+    </div>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
