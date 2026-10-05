@@ -69,7 +69,7 @@ touch.init($('touch-root'), settings, {
     else engine.requestPause();
   },
   onMenu() {
-    engine.requestQuit();
+    openPauseMenu();
   },
 });
 
@@ -137,11 +137,50 @@ async function startGame() {
 
 function showMenu() {
   renderScores();
+  // Con una partida en pausa, el botón principal la continúa en vez de empezar otra
+  const paused = engine.isSuspended();
+  $('play').textContent = paused ? '▶ Continuar' : '▶ Jugar';
+  $('quit').hidden = !paused;
+  syncPlayHint();
   $('menu').hidden = false;
   $('play').focus({ preventScroll: true });
 }
 
-$('play').addEventListener('click', startGame);
+/** Botón de menú durante el juego: congela la partida y abre los ajustes. */
+function openPauseMenu() {
+  if (!playing || engine.isSuspended()) return;
+  engine.suspend();
+  controls.setGameActive(false);
+  touch.setVisible(false);
+  fpsEl.hidden = true;
+  showMenu();
+}
+
+/** Vuelve a la partida con los ajustes que se hayan cambiado. */
+function resumeGame() {
+  $('menu').hidden = true;
+  engine.applySettings({ ...settings.game, ...settings.sound, touchControls: settings.touch.enabled });
+  touch.setPlayer2Visible(wantsPlayer2(engine.currentMode()));
+  touch.setVisible(true, settings.touch.enabled);
+  fpsEl.hidden = !settings.display.showFps;
+  controls.setGameActive(true);
+  controls.flush();
+  audio.resumeIfNeeded();
+  document.activeElement?.blur?.();
+  engine.resume();
+}
+
+$('play').addEventListener('click', () => {
+  if (engine.isSuspended()) resumeGame();
+  else startGame();
+});
+
+// Termina la partida en pausa; startGame() vuelve a mostrar el menú al salir
+$('quit').addEventListener('click', () => {
+  engine.requestQuit();
+  $('quit').hidden = true;
+  $('play').textContent = '▶ Jugar';
+});
 
 // --- Pestañas --------------------------------------------------------------
 
@@ -184,9 +223,18 @@ function syncForm() {
     ? 'Mando de 2 jugadores activado: la segunda cruceta aparece en los modos simultáneo y versus.'
     : '';
   renderPresets();
-  $('play-hint').textContent = t.enabled
-    ? 'En el título, la cruceta (← →) cambia el modo, el disparo continúa y el botón de pausa vuelve atrás.'
-    : 'En el título, Esc o N cambia el modo (1 jugador, 2 jugadores, versus); cualquier otra tecla continúa y deja elegir entre jugar los niveles en orden o escoger uno.';
+  syncPlayHint();
+}
+
+function syncPlayHint() {
+  let text;
+  if (engine.isSuspended() && !engine.isOnTitle())
+    text = 'Partida en pausa. La velocidad, el sonido y los controles se aplican al continuar; el modo y el nivel inicial, en la próxima partida.';
+  else if (settings.touch.enabled)
+    text = 'En el título, la cruceta (← →) cambia el modo, el disparo continúa y el botón de pausa vuelve atrás.';
+  else
+    text = 'En el título, Esc o N cambia el modo (1 jugador, 2 jugadores, versus); cualquier otra tecla continúa y deja elegir entre jugar los niveles en orden o escoger uno.';
+  $('play-hint').textContent = text;
 }
 
 function bind(id, fn, ev = 'input') {

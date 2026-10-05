@@ -711,11 +711,59 @@ function finish() {
 export function requestQuit() {
   quitRequested = true;
   escape = true;
+  suspended = false;
+}
+
+/**
+ * Congela el juego mientras el menú de la página está abierto: ni la partida
+ * ni el sonido avanzan, y al volver se sigue exactamente donde estaba.
+ */
+let suspended = false;
+
+export function suspend() {
+  suspended = true;
+}
+
+export function resume() {
+  suspended = false;
+  curtime = null;
+}
+
+export function isSuspended() {
+  return suspended;
+}
+
+/** Modo de la partida en marcha (puede diferir del elegido en el menú). */
+export function currentMode() {
+  return curmode;
+}
+
+/**
+ * Ajustes cambiados en el menú durante una partida. La velocidad, el sonido,
+ * la música y las vidas ilimitadas se aplican al momento. El modo y el nivel
+ * inicial solo se aplican si se está en la pantalla de título; si no, en la
+ * próxima partida.
+ */
+export function applySettings(opts) {
+  if (ontitle) {
+    configure(opts);
+    shownplayers();
+    loadscores();
+    showtable();
+    if (introdone)
+      sethint();
+    return;
+  }
+  ftime = opts.speed || 80000;
+  soundflag = opts.sound !== false;
+  musicflag = opts.music !== false;
+  unlimlives = !!opts.unlimitedLives;
+  touchui = !!opts.touchControls;
 }
 
 /** Pausa la partida en curso (al ocultar la página o desde el botón táctil). */
 export function requestPause() {
-  if (inPlay) pausef = true;
+  if (inPlay && !suspended) pausef = true;
 }
 
 export function isPaused() {
@@ -949,6 +997,8 @@ let statFrames = 0, statDisplay = 0, statStart = 0;
  * de acelerar para recuperar.
  */
 async function newframe() {
+  while (suspended && !quitRequested)
+    await frames.nextFrame();
   const frameMs = ftime / 1193.181;
   for (;;) {
     video.present();
@@ -4522,6 +4572,10 @@ let hpX = 0, hpY = 0;
 
 /** Rellena out con muestras en coma flotante (-1..1). */
 export function generateSamples(out) {
+  if (suspended) {
+    out.fill(0);
+    return;
+  }
   for (let i = 0; i < out.length; i++) {
     const x = getsample1() / 255;
     hpY = x - hpX + 0.995 * hpY;
