@@ -390,6 +390,7 @@ async function titlescreen() {
   }
   ontitle = false;
   start = false;
+  lockfire();
 }
 
 /** La animación original con Nobbin, Hobbin, Digger, Gold, Emerald y Bonus. */
@@ -888,6 +889,7 @@ async function testpause() {
       await frames.nextFrame();
     }
     controls.getkey();
+    lockfire();
     paused = false;
     pausef = false;
     cleartopline();
@@ -3472,6 +3474,13 @@ export function onPress(action) {
 
 const held = (a) => controls.isHeld(a);
 
+/** firelock[n]: el disparo del jugador n se ignora hasta que suelte la tecla. */
+const firelock = [false, false];
+
+function lockfire() {
+  firelock[0] = firelock[1] = true;
+}
+
 function getcommand() {
   const t = commandbuffer;
   commandbuffer = 0;
@@ -3543,8 +3552,15 @@ function readdir(n) {
   if (aflag[o + 3] || held(o + 3)) { d = true; aflag[o + 3] = false; }
   if (aflag[o + 2] || held(o + 2)) { l = true; aflag[o + 2] = false; }
   if (aflag[o + 0] || held(o + 0)) { r = true; aflag[o + 0] = false; }
-  const fire = held(o + 4) || aflag[o + 4];
+  let fire = held(o + 4) || aflag[o + 4];
   aflag[o + 4] = false;
+  // La tecla con que se empezó la partida (o se quitó la pausa) puede seguir
+  // pulsada: no cuenta como disparo hasta que el jugador la suelte
+  if (firelock[n]) {
+    if (!held(o + 4))
+      firelock[n] = false;
+    fire = false;
+  }
 
   if (n === 0) {
     firepflag = fire;
@@ -4587,5 +4603,5 @@ export function generateSamples(out) {
 /** Estado mínimo para pruebas automatizadas. */
 export function debugState() {
   const d = digdat[curplayer];
-  return { x: d.x, y: d.y, alive: d.alive, lives: getlives(curplayer), score: scdat[0].score, level: levno(), inPlay, paused };
+  return { x: d.x, y: d.y, alive: d.alive, lives: getlives(curplayer), score: scdat[0].score, level: levno(), inPlay, paused, firing: !d.notfiring };
 }
