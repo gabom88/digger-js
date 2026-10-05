@@ -1,6 +1,6 @@
 // Service worker: guarda la app para jugar sin conexión.
 // Cambia VERSION al publicar archivos nuevos.
-const VERSION = 'digger-v4';
+const VERSION = 'digger-v5';
 const FILES = [
   './',
   'index.html',

@@ -57,8 +57,10 @@ body {
   background: #000;
 }
 
+/* En vertical la pantalla baja un poco para dejar arriba los botones de
+   pausa y menú (abajo chocarían con los controles táctiles) */
 @media (orientation: portrait) {
-  #stage { align-items: flex-start; padding-top: calc(var(--safe-t) + 8px); }
+  #stage { align-items: flex-start; padding-top: calc(var(--safe-t) + 56px); }
 }
 
 #fps {
@@ -183,9 +185,6 @@ body {
 }
 .tc-btn svg { width: 20px; height: 20px; fill: currentColor; }
 
-@media (orientation: portrait) {
-  .tc-bar { top: auto; bottom: calc(var(--safe-b) + 10px); right: 50%; transform: translateX(50%); }
-}
 
 .touch-layer.editing .tc {
   opacity: max(var(--tc-opacity), 0.6);
