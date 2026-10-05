@@ -202,19 +202,48 @@ body {
   z-index: 20;
   left: 50%;
   top: calc(var(--safe-t) + 8px);
-  transform: translateX(-50%);
+  /* --ed-y: desplazamiento al arrastrar el panel para apartarlo */
+  transform: translate(-50%, var(--ed-y, 0px));
+  transition: transform 0.25s ease;
   width: min(440px, calc(100% - 24px));
   max-height: calc(100dvh - var(--safe-t) - var(--safe-b) - 16px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: rgba(17, 18, 20, 0.92);
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 8px 14px 12px;
   backdrop-filter: blur(6px);
 }
+.editor.dragging { transition: none; }
+.editor-head { padding: 8px 14px 0; touch-action: none; cursor: grab; }
+.editor-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 14px 4px;
+}
+.editor-handle {
+  flex: none;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 6px 12px 8px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.editor-handle .grip { width: 44px; height: 5px; border-radius: 3px; background: #5a5d66; }
+.editor-handle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.editor.dragging .editor-head, .editor.dragging .editor-handle { cursor: grabbing; }
 .editor[hidden] { display: none; }
 .editor-head { display: flex; align-items: center; gap: 8px; }
+.editor-head .btn { cursor: pointer; }
 .editor-head strong { font-size: 15px; }
 .badge {
   font-size: 12px;
@@ -224,9 +253,9 @@ body {
   padding: 1px 8px;
 }
 .btn.icon { margin-left: auto; min-height: 34px; width: 40px; padding: 0; font-size: 16px; }
-.editor.collapsed { padding-bottom: 8px; }
 .editor.collapsed .editor-body { display: none; }
 .editor-hint { margin: 6px 0; color: var(--muted); font-size: 13px; }
+.editor .row-buttons { margin-bottom: 6px; }
 .editor .check { margin: 4px 0; font-size: 14px; }
 .ed-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; }
 .editor .slider { margin: 6px 0; }
@@ -247,7 +276,10 @@ body {
 .preset-row .btn { flex: none; }
 
 @media (orientation: landscape) and (max-height: 500px) {
-  .editor { width: min(400px, 52%); padding: 6px 12px 8px; }
+  .editor { width: min(400px, 52%); }
+  .editor-head { padding: 6px 12px 0; }
+  .editor-body { padding: 0 12px 2px; }
+  .editor-handle { padding: 4px 12px 6px; }
   .editor-hint { display: none; }
   .editor .slider { margin: 2px 0; }
   .preset-row { margin-top: 6px; }

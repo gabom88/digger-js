@@ -304,6 +304,7 @@ bind('ed-two', (el) => {
 function openEditor() {
   $('menu').hidden = true;
   $('editor').hidden = false;
+  setEditorOffset(0, false);
   updateOrientationBadge();
   touch.setPlayer2Visible(true);
   touch.setVisible(true, true);
@@ -328,6 +329,92 @@ $('ed-collapse').addEventListener('click', () => {
   const collapsed = ed.classList.toggle('collapsed');
   $('ed-collapse').textContent = collapsed ? '▾' : '▴';
   $('ed-collapse').setAttribute('aria-expanded', String(!collapsed));
+  setEditorOffset(edOffset);
+});
+
+// --- Apartar el panel del editor ---------------------------------------------
+// El panel se arrastra por la cabecera o por el asa de abajo. Hacia arriba
+// puede salir casi entero de la pantalla (solo queda el asa a la vista) y
+// hacia abajo hasta dejar solo la cabecera. Un toque en el asa lo aparta o lo
+// devuelve a su sitio.
+
+let edOffset = 0;
+
+function editorLimits() {
+  const ed = $('editor');
+  const top = parseFloat(getComputedStyle(ed).top) || 0;
+  const h = ed.offsetHeight;
+  return {
+    // Arriba queda visible solo el asa, justo bajo la zona segura (muesca)
+    min: -(h - $('ed-handle').offsetHeight),
+    max: Math.max(0, window.innerHeight - top - $('editor').querySelector('.editor-head').offsetHeight - 12),
+  };
+}
+
+function setEditorOffset(y, animate = true) {
+  const ed = $('editor');
+  const { min, max } = editorLimits();
+  edOffset = Math.min(max, Math.max(min, y));
+  ed.classList.toggle('dragging', !animate);
+  ed.style.setProperty('--ed-y', edOffset + 'px');
+  const away = edOffset < -20;
+  $('ed-handle-text').textContent = away
+    ? '▾ Toca o arrastra para bajar el panel'
+    : 'Toca o arrastra para apartar el panel ▴';
+  $('ed-handle').setAttribute('aria-label', away ? 'Mostrar el panel' : 'Apartar el panel');
+}
+
+function toggleEditorAway() {
+  setEditorOffset(edOffset < -20 || edOffset > 20 ? 0 : editorLimits().min);
+}
+
+for (const el of [$('ed-handle'), $('editor').querySelector('.editor-head')]) {
+  el.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button')) return;
+    e.preventDefault();
+    const pid = e.pointerId;
+    const startY = e.clientY;
+    const start = edOffset;
+    let moved = false;
+    try { el.setPointerCapture(pid); } catch { /* sin captura también funciona */ }
+    const move = (ev) => {
+      if (ev.pointerId !== pid) return;
+      const dy = ev.clientY - startY;
+      if (Math.abs(dy) > 6) moved = true;
+      if (moved) setEditorOffset(start + dy, false);
+    };
+    const up = (ev) => {
+      if (ev.pointerId !== pid) return;
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', up);
+      $('editor').classList.remove('dragging');
+      if (!moved && el === $('ed-handle')) toggleEditorAway();
+    };
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+  });
+}
+
+$('ed-handle').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    toggleEditorAway();
+  }
+});
+
+// Con ratón o trackpad: la rueda sobre la cabecera o el asa mueve el panel
+for (const el of [$('ed-handle'), $('editor').querySelector('.editor-head')]) {
+  el.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    setEditorOffset(edOffset - e.deltaY, false);
+    $('editor').classList.remove('dragging');
+  }, { passive: false });
+}
+
+window.addEventListener('resize', () => {
+  if (!$('editor').hidden) setEditorOffset(edOffset, false);
 });
 
 $('ed-reset').addEventListener('click', () => {
