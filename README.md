@@ -125,6 +125,14 @@ Es el modo nuevo de esta versión: **dos jugadores en la misma pantalla y al mis
 
 En el menú también se puede cambiar el nivel inicial del modo ORIGINAL, la velocidad del juego, el sonido y la música, y activar vidas ilimitadas.
 
+### Ajustes sin perder la partida
+
+El botón de menú (arriba a la derecha) **no termina la partida**. La congela, música incluida, y el botón principal pasa a decir **«▶ Continuar»**.
+
+- Al continuar se aplican la velocidad, el sonido, la música, las vidas ilimitadas y los cambios del mando táctil.
+- El modo de juego y el nivel inicial se aplican en la próxima partida. Si abriste el menú en la pantalla de título, se aplican al continuar.
+- **«■ Terminar partida»** abandona la partida y vuelve al inicio.
+
 ---
 
 ## Controles
@@ -147,6 +155,8 @@ Todas las teclas se pueden cambiar en **Menú → Teclas**.
 
 **Mando (Gamepad):** cruceta o palanca para moverse, A/B/X/Y para disparar, Start para pausar y Select para volver al título.
 
+La tecla con la que empiezas la partida (o quitas la pausa) no dispara aunque la sigas pulsando. Digger dispara en cuanto la sueltas y la vuelves a pulsar.
+
 ---
 
 ## Mando táctil para uno o dos jugadores
@@ -159,6 +169,8 @@ En el móvil y en la tablet aparece un mando en pantalla. Al activar **Menú →
 - **Tamaño por jugador:** la cruceta y el disparo de cada jugador tienen su propio tamaño. La transparencia es común.
 - **Vertical y horizontal por separado:** cada orientación guarda su propia disposición. Gira el teléfono para ajustar la otra.
 - **Presets:** «Guardar preset» guarda la disposición completa con un nombre: las dos orientaciones, los tamaños, la transparencia y si el jugador 2 está activo. Se carga desde el editor o desde la pestaña Táctil.
+- **Apartar el panel:** un toque en el asa de abajo sube el panel del editor y deja libre la pantalla para colocar los controles. Otro toque lo trae de vuelta. También se puede arrastrar por el asa o por la cabecera.
+- **Pausa y menú:** los botones van siempre arriba a la derecha, lejos de las crucetas. En vertical, la pantalla del juego baja un poco para dejarles sitio.
 - **En el título:** la cruceta cambia de modo, el disparo continúa y el botón de pausa vuelve atrás.
 
 ---

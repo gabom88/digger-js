@@ -50,7 +50,15 @@ juego: los controles se arrastran y se dimensionan mientras se ven. Puede haber
 una segunda cruceta y un segundo disparo (en azul) para el jugador 2. Aparecen
 en los modos simultáneo y versus. Las disposiciones vertical y horizontal se
 guardan por separado, y «Guardar preset» guarda las dos juntas, con los
-tamaños y la transparencia.
+tamaños y la transparencia. El panel del editor se aparta
+con el asa inferior (toque o arrastre) para dejar libre la pantalla.
+
+## Pausa con menú
+
+El botón de menú durante el juego congela la partida (`engine.suspend()`) y el
+botón principal pasa a «▶ Continuar». Al continuar, `engine.applySettings()`
+aplica la velocidad, el sonido y la música; el modo y el nivel inicial se
+aplican en la próxima partida. «Terminar partida» llama a `engine.requestQuit()`.
 
 ## Velocidad
 
