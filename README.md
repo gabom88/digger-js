@@ -182,7 +182,7 @@ El juego es una PWA: se instala como app y funciona **sin conexión** una vez ca
 | `web/js/engine.js` | El motor, traducido de `main.c`, `digger.c`, `monster.c`, `bags.c`, `sound.c` y los demás archivos C. |
 | `web/js/video.js` | Framebuffer indexado de 640×400 con las paletas VGA originales. |
 | `web/js/touch.js` | Mando táctil de uno o dos jugadores y su editor. |
-| `tools/` | `serve.py` (servidor local sin caché) y `convert-assets.mjs` (convierte los gráficos del C). |
+| `tools/` | `serve.py` (servidor local sin caché), `engine-test.mjs` (prueba el motor en Node y saca capturas) y `convert-assets.mjs` (convierte los gráficos del C). |
 | `docs/screenshots/` | Las imágenes de este README. |
 | Raíz | Código C original de *Digger Remastered*. |
 
@@ -200,7 +200,7 @@ Cada push a `main` publica la carpeta `web/` en GitHub Pages mediante el workflo
 
 ### Capturas
 
-Las capturas del juego se generaron ejecutando el motor real en Node.js y guardando su framebuffer como PNG, con los dos jugadores controlados por un guion. La del editor táctil es del navegador.
+Las capturas del juego se generaron ejecutando el motor real en Node.js y guardando su framebuffer como PNG, con los dos jugadores controlados por un guion. La del editor táctil es del navegador. `node tools/engine-test.mjs --shots carpeta` hace una prueba rápida del motor y guarda capturas.
 
 ---
 
